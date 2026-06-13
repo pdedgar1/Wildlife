@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thirty images, three arguments</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f3ee;--surface:#fff;--text:#1a1a16;--muted:#636358;--faint:#a0a093;
+  --border:#dddbd2;--accent:#0d4a32;--accent2:#7c3e0e;--night:#1e2a4a;
+  --radius:10px;--radius-lg:14px;
+  --c-species:#0d4a32;--c-mimicry:#8a5000;--c-urban:#4a4a4a;
+}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:15px}
+.page-wrap{max-width:1200px;margin:0 auto;padding:0 clamp(1rem,4vw,2.5rem)}
+
+/* HEADER */
+.site-header{padding:2.5rem 0 2rem;max-width:900px}
+.site-header .eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:.6rem}
+.site-header h1{font-size:2rem;font-weight:600;letter-spacing:-.02em;line-height:1.2;margin-bottom:.75rem}
+.site-header .lede{font-size:15px;color:var(--muted);max-width:620px;line-height:1.7}
+.meta-strip{display:flex;gap:16px;margin-top:1.25rem;flex-wrap:wrap}
+.meta-chip{font-size:12px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted)}
+.meta-chip.night{background:#1e2a4a;color:#a8b8e0;border-color:#1e2a4a}
+.meta-chip.day{background:#fffbeb;color:#7c5a0a;border-color:#f5d98a}
+
+/* PATTERNS */
+.patterns-section{padding:0 0 2rem;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pattern-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.pattern-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--pattern-color,var(--accent));opacity:.7}
+.pattern-card:hover{border-color:#bbb;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.pattern-card.active{border-color:var(--pattern-color,var(--accent));box-shadow:0 0 0 3px color-mix(in srgb,var(--pattern-color,var(--accent)) 15%,transparent)}
+.pattern-num{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);display:block;margin-bottom:.4rem}
+.pattern-card h2{font-size:15px;font-weight:600;line-height:1.3;margin-bottom:.5rem}
+.pattern-card p{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:.75rem}
+.pattern-count{font-size:11px;font-weight:600;color:var(--pattern-color,var(--accent));opacity:.9}
+.pattern-card .dismiss{display:none;position:absolute;top:10px;right:12px;font-size:18px;color:var(--faint);background:none;border:none;cursor:pointer;line-height:1}
+.pattern-card.active .dismiss{display:block}
+
+/* MAP */
+.map-section{padding:0 0 2rem}
+.map-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--faint);margin-bottom:.75rem}
+.map-outer{position:relative;width:100%;padding-bottom:58%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:visible}
+.map-inner{position:absolute;inset:0;border-radius:var(--radius-lg);overflow:hidden}
+.map-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.map-nodes{position:absolute;inset:0;z-index:2}
+/* Axes */
+.axis-x-left{position:absolute;left:12px;bottom:10px;font-size:10px;color:var(--faint);display:flex;align-items:center;gap:4px}
+.axis-x-right{position:absolute;right:12px;bottom:10px;font-size:10px;color:var(--faint);display:flex;align-items:center;gap:4px}
+.axis-y-top{position:absolute;right:10px;top:10px;font-size:10px;color:var(--faint);writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg)}
+.axis-y-bot{position:absolute;right:10px;bottom:26px;font-size:10px;color:var(--faint);writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg)}
+.axis-arrow{opacity:.5}
+/* Grid lines */
+.map-grid-h{position:absolute;left:0;right:0;height:1px;background:var(--border);opacity:.5;pointer-events:none}
+.map-grid-v{position:absolute;top:0;bottom:0;width:1px;background:var(--border);opacity:.5;pointer-events:none}
+/* Image nodes */
+.map-node{position:absolute;width:40px;height:40px;border-radius:50%;border:2px solid #fff;overflow:hidden;cursor:pointer;transform:translate(-50%,-50%);transition:all .25s;box-shadow:0 1px 4px rgba(0,0,0,.2);z-index:3}
+.map-node img{width:100%;height:100%;object-fit:cover;display:block}
+.map-node:hover{width:54px;height:54px;z-index:10;box-shadow:0 3px 12px rgba(0,0,0,.3)}
+.map-node.night-node{border-color:#4a6090}
+.map-node.dimmed{opacity:.12;filter:grayscale(0.6)}
+.map-node.highlighted{border-color:#fff;box-shadow:0 0 0 3px var(--highlight-color,var(--accent)),0 2px 8px rgba(0,0,0,.3)}
+/* Tooltip */
+.node-tooltip{position:absolute;background:var(--text);color:#fff;font-size:11px;padding:4px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;z-index:20;display:none;transform:translate(-50%,-110%)}
+/* Legend */
+.map-legend{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted)}
+.legend-line{width:24px;height:2px;flex-shrink:0}
+.legend-dot{width:12px;height:12px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 2px var(--accent);flex-shrink:0}
+.legend-dot.night{box-shadow:0 0 0 2px var(--night)}
+
+/* GALLERY */
+.gallery-section{padding:0 0 3rem}
+.gallery-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px}
+.gallery-header h3{font-size:14px;font-weight:600;color:var(--text)}
+.gallery-controls{display:flex;gap:8px;align-items:center}
+.filter-row{display:flex;gap:6px;flex-wrap:wrap}
+.filter-pill{padding:4px 12px;font-size:12px;font-weight:500;border:1px solid var(--border);border-radius:20px;cursor:pointer;background:var(--surface);color:var(--muted);transition:all .15s}
+.filter-pill:hover{border-color:var(--accent);color:var(--accent)}
+.filter-pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.quiz-toggle{padding:4px 14px;font-size:12px;font-weight:500;border:1px solid var(--border);border-radius:20px;cursor:pointer;background:var(--surface);color:var(--muted);transition:all .15s}
+.quiz-toggle.active{background:#f0ecfb;border-color:#9370c8;color:#4a2d7a}
+.gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.img-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:all .2s}
+.img-card:hover{box-shadow:0 2px 10px rgba(0,0,0,.1);transform:translateY(-1px)}
+.img-card .thumb{width:100%;height:185px;object-fit:cover;display:block}
+.card-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:5px}
+.card-badges{display:flex;gap:4px;flex-wrap:wrap}
+.badge{display:inline-block;font-size:10px;font-weight:600;padding:2px 7px;border-radius:12px;border:1px solid transparent}
+.tx-Insect{background:#fff8eb;color:#7c4f1a;border-color:#f5d9a0}
+.tx-Arachnid{background:#f3f0fb;color:#4a2d7a;border-color:#c9bfe8}
+.tx-Amphibian{background:#e8f4ee;color:#0d4a32;border-color:#9fd4b8}
+.tx-Reptile{background:#e6f3f1;color:#1a5c54;border-color:#9fd2cc}
+.tx-Bird{background:#e6eef8;color:#1a4472;border-color:#9fc2e8}
+.tx-Mammal{background:#f5ede8;color:#5c3520;border-color:#e0b89a}
+.tx-Crustacean{background:#fbe8e8;color:#7a2020;border-color:#e8a0a0}
+.tx-Myriapod{background:#eef3e2;color:#3d4f1a;border-color:#b8cc8a}
+.t-day{background:#fffaeb;color:#7c5a0a;border-color:#f5d98a}
+.t-night{background:#eceef8;color:#2d3470;border-color:#a8b0e0}
+.card-species{font-size:13px;font-weight:600;line-height:1.3}
+.card-sci{font-size:11px;color:var(--muted);font-style:italic}
+.card-ctx{font-size:11px;color:var(--muted);line-height:1.4;margin-top:1px}
+.card-species.quiz-blur{filter:blur(5px);user-select:none;transition:filter .3s}
+.card-sci.quiz-blur{filter:blur(5px);user-select:none}
+.reveal-btn{margin-top:4px;width:100%;padding:4px;font-size:11px;font-weight:500;border:1px dashed var(--border);border-radius:6px;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+.reveal-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;overflow-y:auto;padding:2rem 1rem;backdrop-filter:blur(3px)}
+.modal-overlay.open{display:flex;align-items:flex-start;justify-content:center}
+.modal{background:var(--surface);border-radius:var(--radius-lg);max-width:940px;width:100%;display:grid;grid-template-columns:1.1fr 1fr;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4)}
+.modal-img-wrap{position:relative;background:#0a0a0a;min-height:460px;display:flex;align-items:center}
+.modal-img-wrap img{width:100%;max-height:560px;object-fit:contain;display:block}
+.modal-close{position:absolute;top:12px;right:12px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:30px;height:30px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:rgba(0,0,0,.85)}
+.modal-body{padding:1.5rem;overflow-y:auto;max-height:560px;display:flex;flex-direction:column;gap:10px}
+.modal-species{font-size:17px;font-weight:600;line-height:1.3}
+.modal-sci{font-size:13px;font-style:italic;color:var(--muted)}
+.modal-alt{font-size:12px;color:var(--muted);background:#f7f6f1;border-radius:6px;padding:8px 10px;line-height:1.6;font-style:italic;border-left:3px solid var(--border)}
+.modal-section{display:flex;flex-direction:column;gap:3px}
+.modal-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
+.modal-text{font-size:13px;color:var(--text);line-height:1.6}
+.modal-disc{background:#f7f6f1;border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.disc-row{display:flex;gap:8px;align-items:flex-start}
+.disc-key{font-size:11px;font-weight:600;color:var(--accent);min-width:88px;padding-top:1px;text-transform:capitalize}
+.disc-val{font-size:12px;color:var(--muted);line-height:1.5}
+.modal-nav{display:flex;gap:8px;margin-top:auto;padding-top:10px;border-top:1px solid var(--border)}
+.modal-nav button{padding:6px 14px;font-size:13px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--muted);cursor:pointer;flex:1}
+.modal-nav button:hover{border-color:var(--accent);color:var(--accent)}
+.modal-badges{display:flex;gap:4px;flex-wrap:wrap}
+
+/* RESPONSIVE */
+@media(max-width:780px){
+  .patterns-section{grid-template-columns:1fr}
+  .modal{grid-template-columns:1fr;grid-template-rows:300px auto}
+  .modal-img-wrap{min-height:280px}
+  .map-node{width:28px;height:28px}
+  .map-node:hover{width:40px;height:40px}
+  .site-header h1{font-size:1.4rem}
+}
+@media(max-width:600px){
+  .site-header{padding-top:1.5rem;padding-bottom:1.5rem}
+}
+</style>
+</head>
+<body>
+
+<div class="page-wrap">
+<header class="site-header">
+  <p class="eyebrow">Interdisciplinary Workshop — Tropical Field Photography</p>
+  <h1>Thirty images, three arguments</h1>
+  <p class="lede">A single field trip through tropical Central America. The photographs surface three unresolved tensions — in evolution, ecology, and in the idea of "nature" itself. Each pattern cuts across taxa, habitats, and disciplines.</p>
+  <div class="meta-strip">
+    <span class="meta-chip">30 photographs</span>
+    <span class="meta-chip">8 taxonomic groups</span>
+    <span class="meta-chip night">16 after dark</span>
+    <span class="meta-chip day">14 daylight</span>
+    <span class="meta-chip">Forest · Coast · Urban</span>
+  </div>
+</header>
+
+<section class="patterns-section" id="patterns-section">
+  <div class="pattern-card" id="pc-signals" data-pattern="signals" style="--pattern-color:#0d6b40" tabindex="0" role="button" aria-pressed="false">
+    <button class="dismiss" onclick="clearPattern(event)" aria-label="Clear filter">×</button>
+    <span class="pattern-num">Pattern I</span>
+    <h2>Hide or advertise</h2>
+    <p>The glasswing butterfly is near-invisible — its wings are transparent down to the physics of light. The red-eyed tree frog is a neon sign. Every organism here has made the same evolutionary bet, just differently: blend in, or stand out. Two opposite survival strategies shaped by the same predation pressure.</p>
+    <span class="pattern-count">18 images along this axis</span>
+  </div>
+  <div class="pattern-card" id="pc-night" data-pattern="night" style="--pattern-color:#2d4a9a" tabindex="0" role="button" aria-pressed="false">
+    <button class="dismiss" onclick="clearPattern(event)" aria-label="Clear filter">×</button>
+    <span class="pattern-num">Pattern II</span>
+    <h2>The night shift</h2>
+    <p>More than half these photographs were taken after dark. The daytime community of birds and iguanas steps aside for moths, frogs, spiders, and caterpillars. A different set of actors, on the same stage, using the same resources. The forest doesn't sleep — it changes shift.</p>
+    <span class="pattern-count">16 images · nocturnal community</span>
+  </div>
+  <div class="pattern-card" id="pc-gradient" data-pattern="gradient" style="--pattern-color:#7c3e0e" tabindex="0" role="button" aria-pressed="false">
+    <button class="dismiss" onclick="clearPattern(event)" aria-label="Clear filter">×</button>
+    <span class="pattern-num">Pattern III</span>
+    <h2>Where does nature end?</h2>
+    <p>A sloth in an undisturbed canopy. An iguana by a parked motorcycle. A howler monkey on a utility wire. A pig on a tourist beach. These images trace a gradient. The boundary between wild and domestic, between nature and culture, turns out not to be a wall.</p>
+    <span class="pattern-count">9 images · nature–culture gradient</span>
+  </div>
+</section>
+
+<section class="map-section" id="map-section">
+  <div class="map-title">Relationship map — each photograph positioned by signal strategy (x) and habitat modification (y)</div>
+  <div class="map-outer" id="map-outer">
+    <div class="map-inner" id="map-inner">
+      <div class="map-grid-h" style="top:50%"></div>
+      <div class="map-grid-v" style="left:50%"></div>
+      <svg class="map-svg" id="map-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div class="map-nodes" id="map-nodes"></div>
+      <div class="axis-x-left"><span class="axis-arrow">←</span> Conceal</div>
+      <div class="axis-x-right">Advertise <span class="axis-arrow">→</span></div>
+      <div class="axis-y-top">Human-modified ↑</div>
+      <div class="axis-y-bot">↓ Wild habitat</div>
+    </div>
+  </div>
+  <div id="node-tooltip" class="node-tooltip"></div>
+  <div class="map-legend">
+    <div class="legend-item"><div class="legend-line" style="background:var(--c-species)"></div> Same species</div>
+    <div class="legend-item"><div class="legend-line" style="background:var(--c-mimicry);border-top:2px dashed var(--c-mimicry);background:none;margin-top:1px"></div> Mimicry ring</div>
+    <div class="legend-item"><div class="legend-line" style="border-top:2px dotted var(--c-urban)"></div> Urban wildlife thread</div>
+    <div class="legend-item"><div class="legend-dot night"></div> Night photograph</div>
+  </div>
+</section>
+
+<section class="gallery-section">
+  <div class="gallery-header">
+    <h3 id="gallery-heading">All 30 images</h3>
+    <div class="gallery-controls">
+      <div class="filter-row" id="taxon-pills"></div>
+      <button class="quiz-toggle" id="quiz-toggle" onclick="toggleQuiz()" title="Hide species names for identification practice">Quiz mode</button>
+    </div>
+  </div>
+  <div class="gallery-grid" id="gallery-grid"></div>
+</section>
+
+</div><!-- /.page-wrap -->
+
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal" id="modal">
+    <div class="modal-img-wrap">
+      <img id="modal-img" src="" alt="">
+      <button class="modal-close" id="modal-close">×</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+const IMAGES = [
+  {file:'_DSF0292.JPG',species:'Groove-billed Ani',sci:'Crotophaga sulcirostris',taxon:'Bird',family:'Cuculidae',
+   time:'day',habitat:'urban',mapX:52,mapY:86,
+   alt:'A glossy all-black bird with a long graduated tail and a distinctive thick compressed bill strides through short green grass in bright daylight.',
+   features:'All-black plumage; long graduated tail held low; laterally compressed, arched bill; yellow eye; short legs; closely mown grass substrate; ~33 cm total length',
+   context:'Daytime; closely mown grass lawn in urban or suburban environment',
+   obs:'Groove-billed Anis are gregarious cuckoos that live in communal groups, share incubation duties across multiple females, and cooperatively raise young — a rare social breeding system. Forages on the ground for insects, often following cattle or lawn mowers to catch flushed prey. Conspicuously unbothered by open habitat and human proximity. Adds a second all-black urban lawn bird to the set alongside the Great-tailed Grackle (_DSF2133) — a useful contrast: same habitat, very different families, ecologies, and social systems.',
+   disc:{ecology:'Cooperative breeding: multiple females lay in a shared nest; communal incubation and chick-rearing reduces per-individual cost',evolution:'Brood parasitism is common in the cuckoo family (Cuculidae) — the Ani\'s cooperative system represents the opposite evolutionary trajectory within the same family',photography:'Compare composition with _DSF2133 (grackle on same substrate): both all-black birds on green lawn, but different focal lengths and subject distances reveal different photographic choices'}},
+  {file:'_DSF0793.JPG',species:'Green Iguana',sci:'Iguana iguana',taxon:'Reptile',family:'Iguanidae',
+   time:'day',habitat:'urban',mapX:22,mapY:84,
+   alt:'A pale green iguana rests on dry grass next to a parked motorcycle.',
+   features:'Adult ~70–90 cm; pale green-grey with darker tail banding; dorsal spines; motorcycle with licence plate visible',
+   context:'Daytime; roadside verge in suburban environment',
+   obs:'Completely unbothered by the motorcycle. Typical basking posture. Part of a recurring urban wildlife thread alongside the grackle, howler monkey, and beach pig.',
+   disc:{ecology:'Urban ectotherm — exploits human-modified surfaces for thermoregulation',evolution:'Behavioural tolerance of humans as a selected or learned trait',photography:'Environmental contrast: prehistoric animal against mundane infrastructure'}},
+  {file:'_DSF2060.JPG',species:'Millipede',sci:'Diplopoda sp.',taxon:'Myriapod',family:'Diplopoda',
+   time:'day',habitat:'station',mapX:30,mapY:50,
+   alt:'Close-up macro of a small tan millipede on a wooden surface.',
+   features:'Segmented body; paired legs per segment; yellowish-brown dorsal surface; ~1 cm',
+   context:'Daytime; flat wooden surface at field station',
+   obs:'Macro photography reveals segmentation invisible to the naked eye. Millipedes are key forest detritivores.',
+   disc:{ecology:'Detritivore role in nutrient cycling — breaks down leaf litter into available nutrients',photography:'Macro depth of field: shallow focus isolates subject, compresses context'}},
+  {file:'_DSF2133.JPG',species:'Great-tailed Grackle',sci:'Quiscalus mexicanus',taxon:'Bird',family:'Icteridae',
+   time:'day',habitat:'urban',mapX:57,mapY:90,
+   alt:'A glossy black bird with a long keel-shaped tail strides across vivid green lawn.',
+   features:'All-black plumage with iridescent sheen; long wedge tail; yellow eye; strong pointed bill',
+   context:'Daytime; closely mown grass lawn in urban setting',
+   obs:'Male plumage. Alert foraging posture. One of the most successful urban birds in the Americas — a generalist that thrives where others fail.',
+   disc:{evolution:'Sexual selection: the elaborate tail is a costly signal used in mate choice',ecology:'Dietary generalism as the key to urban success — eats insects, seeds, scraps, eggs',photography:'Strong tonal contrast: all-black bird against vivid green — a classic exposure challenge'}},
+  {file:'_DSF2501.JPG',species:'Sloth',sci:'Bradypus or Choloepus sp.',taxon:'Mammal',family:'Bradypodidae',
+   time:'day',habitat:'forest',mapX:8,mapY:6,
+   alt:'A brown sloth hangs motionless from branches in sun-dappled tropical canopy.',
+   features:'Brown shaggy fur; long curved claws gripping branch; partially obscured by leaves; suspended beneath branch',
+   context:'Daytime; mid-to-upper canopy of tropical broadleaf forest',
+   obs:'Shot looking upward through canopy — the animal blends seamlessly with bark. Algae often grow in sloth fur, adding a greenish tinge that enhances camouflage.',
+   disc:{physiology:'Lowest metabolic rate of any non-hibernating mammal; body temperature fluctuates like a reptile\'s',ecology:'Suspended posture uses gravity to reduce muscle energy — extreme energy conservation strategy',photography:'Canopy upshot: bright sky creates exposure challenges; subject almost invisible even when found'}},
+  {file:'_DSF2617.JPG',species:'Rufous Motmot (tentative)',sci:'Baryphthengus martii?',taxon:'Bird',family:'Momotidae',
+   time:'day',habitat:'forest',mapX:60,mapY:24,
+   alt:'A chestnut and blue bird perches on a branch in dense tropical vegetation.',
+   features:'Rufous/chestnut body; blue accent; perched on branch; heavy foreground bokeh',
+   context:'Daytime; dense riparian or forest-edge vegetation',
+   obs:'Heavy foreground obstruction reduces ID certainty. Motmots are sit-and-wait predators — they watch from a perch and strike. Neotropical endemic family.',
+   disc:{ecology:'Sit-and-wait predation: energy-efficient strategy suited to dense forest environments',photography:'Creative use of foreground blur: the obstruction becomes atmosphere rather than problem'}},
+  {file:'_DSF2749.JPG',species:'Orb-weaver spider',sci:'Araneidae sp.',taxon:'Arachnid',family:'Araneidae',
+   time:'day',habitat:'station',mapX:40,mapY:52,
+   alt:'A circular orb-weaver web stretches between wooden beams with a small spider at the hub.',
+   features:'Classic spiral orb web; spider at hub; irregular debris strands; wooden structural beams',
+   context:'Daytime; underside of wooden structure at field station',
+   obs:'Web is an extended phenotype — the silk structure is as much "the organism" as the spider. A stabilimentum (debris line) may deter birds from flying through.',
+   disc:{physics:'Spider silk has greater tensile strength than steel by weight; spiral and radial threads differ in elasticity',ecology:'Extended phenotype: the structure an organism builds changes its evolutionary fitness',photography:'Web photography requires backlighting or dark background to reveal silk — light management is essential'}},
+  {file:'_DSF2774.JPG',species:'Geometrid or Noctuid moth',sci:'Lepidoptera (Geometridae/Noctuidae)',taxon:'Insect',family:'Geometridae',
+   time:'night',habitat:'station',mapX:8,mapY:56,
+   alt:'A large moth with mottled gray-brown wings rests on the grate of an outdoor ceiling lamp at night.',
+   features:'Broad wings with cryptic bark-like mottled pattern; wingspan ~5–8 cm; other insects on lamp',
+   context:'Nighttime; exterior ceiling lamp on building — artificial light attraction',
+   obs:'Classic phototaxis: attracted to artificial light. The wing pattern provides perfect bark camouflage by day, but renders the animal helpless at a lit lamp at night. A cost of light pollution.',
+   disc:{ecology:'Light pollution as ecological trap — artificial lights disrupt celestial navigation in moths',evolution:'Cryptic daytime camouflage becomes irrelevant after dark — an evolutionary mismatch with artificial light',entomology:'Phototaxis mechanism still debated: disruption of celestial navigation vs. simple light-seeking'}},
+  {file:'_DSF2806.JPG',species:'Red-eyed Tree Frog',sci:'Agalychnis callidryas',taxon:'Amphibian',family:'Phyllomedusidae',
+   time:'night',habitat:'station',mapX:87,mapY:61,
+   alt:'A red-eyed tree frog in profile against a pure black background — vivid orange-red eye, green body, orange toe pads.',
+   features:'Vivid green dorsal surface; striking orange-red eye with vertical pupil; orange toe pads; white belly; ~6 cm',
+   context:'Nighttime; wet dark surface (glass or leaf) under flash lighting',
+   obs:'Iconic Central American species. Flash illumination creates the dramatic black-background effect — the frog is in daylight, but the background is dark. Flash colouration hypothesis: sudden display of bright eyes startles predators.',
+   disc:{evolution:'Flash colouration: sudden revelation of bright eyes to a predator buys escape time — a defensive startle',photography:'Black background effect: flash + fast shutter eliminates ambient light entirely; the image is constructed, not found',ecology:'Adhesive toe pads allow vertical movement on wet surfaces — specialised for arboreal nocturnal life'}},
+  {file:'_DSF3186.JPG',species:'Fishing spider / Nursery web spider',sci:'Pisauridae sp.',taxon:'Arachnid',family:'Pisauridae',
+   time:'night',habitat:'forest',mapX:26,mapY:17,
+   alt:'A large grey-brown spider carrying a bluish-grey egg sac rests on a broad tropical leaf at night.',
+   features:'Gray-brown mottled body; large bluish-grey spherical egg sac; long legs; fenestrated leaf (Monstera?)',
+   context:'Nighttime; tropical forest understory',
+   obs:'Female carrying egg sac — maternal brooding. Energy cost of carrying vs. protection benefit. The fenestrated aroid leaf in the background has its own story: window leaves may reduce wind damage.',
+   disc:{evolution:'Parental care in spiders: energy investment in egg protection is a derived trait, not universal',botany:'Fenestrated Monstera-like leaves — leaf windows may reduce wind resistance or deter herbivores',ecology:'Maternal investment trade-off: females carrying egg sacs forage less effectively'}},
+  {file:'_DSF3190.JPG',species:'Doris Longwing / Cattleheart butterfly',sci:'Heliconius doris or Parides sp.',taxon:'Insect',family:'Nymphalidae',
+   time:'night',habitat:'forest',mapX:80,mapY:22,
+   alt:'A dark butterfly with black wings, a white band, and red-pink spots roosts on a leaf stem at night.',
+   features:'Black wings; white band across hindwing; red/pink spots on thorax; narrow forewing; pink-tipped antennae',
+   context:'Nighttime; resting on thin plant stem in forest understory',
+   obs:'Roosting behaviour — butterflies rest motionless at night. Aposematic colouration warns of toxicity. Heliconius butterflies can recycle pollen for amino acids, enabling unusually long adult lifespans.',
+   disc:{chemistry:'Cyanogenic glycosides sequestered from Passiflora host plants make adults toxic',evolution:'Müllerian mimicry — multiple unpalatable species share warning patterns to spread predator learning cost',ecology:'Pollen feeding extends lifespan from days to months — an unusual nutritional strategy in Lepidoptera'}},
+  {file:'_DSF3199.JPG',species:'Tiger-patterned butterfly',sci:'Mechanitis or Tithorea sp. (Ithomiidae)',taxon:'Insect',family:'Nymphalidae',
+   time:'night',habitat:'forest',mapX:86,mapY:14,
+   alt:'A butterfly with orange, black, and yellow tiger-striped wings hangs head-down from a bare twig at night.',
+   features:'Orange forewing with black border stripes; yellow-green irregular bands; white marginal dots; long wings',
+   context:'Nighttime; dry bare twig in forest, flash photography',
+   obs:'Roosting on a dead twig. Tiger-stripe pattern is shared across dozens of unrelated poisonous species in a Müllerian mimicry ring — one of the most studied systems in evolutionary biology.',
+   disc:{evolution:'Müllerian mimicry rings: multiple toxic species converge on the same signal, reducing per-species predator education cost',ecology:'Mimicry rings extend across entire insect communities — a community-level evolutionary phenomenon',photography:'Head-down roosting posture on bare twig: compositionally clean against the black background'}},
+  {file:'_DSF3202.JPG',species:'Glasswing butterfly',sci:'Greta oto or related Ithomiidae',taxon:'Insect',family:'Nymphalidae',
+   time:'day',habitat:'forest',mapX:4,mapY:19,
+   alt:'A glasswing butterfly with nearly transparent wings and an orange-brown basal band hangs in tropical forest foliage.',
+   features:'Transparent wing membrane with dark margins; orange-brown basal band; small white marginal spots; fine black veining',
+   context:'Dim ambient light; tropical forest interior',
+   obs:'Transparency as camouflage: wing scales modified at the nano-scale to minimise reflection across the visible spectrum. The butterfly is present in the image but almost absent from it.',
+   disc:{physics:'Wing transparency arises from tilted pillar nanostructures that reduce reflectance — structural optics, not pigment',evolution:'Transparency has evolved convergently in multiple butterfly families — same adaptive solution reached independently',ecology:'Classic study system in tropical mimicry — the transparent wing is itself a form of Batesian protection'}},
+  {file:'_DSF3213.JPG',species:'Glasswing butterfly',sci:'Greta oto or related Ithomiidae',taxon:'Insect',family:'Nymphalidae',
+   time:'day',habitat:'forest',mapX:8,mapY:28,
+   alt:'A glasswing butterfly with transparent wings and a blue-white iridescent sheen rests on a large tropical leaf.',
+   features:'Transparent wings with dark borders; structural iridescent blue-white reflection; resting on broad smooth leaf',
+   context:'Dim ambient light; mid-level forest vegetation',
+   obs:'Compare with _DSF3202: same species or close relative, but here a blue iridescent sheen appears across the wings. The difference is angle of illumination, not wing colour — structural colour shifts with viewing angle.',
+   disc:{physics:'Structural colour: constructive interference from nanostructures produces wavelength-dependent reflection — like soap bubbles, peacock feathers',photography:'Iridescence is angle-dependent: a few centimetres change in camera position would reveal a different colour entirely'}},
+  {file:'_DSF3215.JPG',species:'Parasitised hawk moth caterpillar + braconid wasp cocoons',sci:'Sphingidae + Cotesia sp.',taxon:'Insect',family:'Braconidae',
+   time:'night',habitat:'forest',mapX:20,mapY:12,
+   alt:'A pale green caterpillar clings to a twig at night, its back covered in rows of small brown cocoons.',
+   features:'Pale green segmented body; white lateral stripe; ~6–8 cm; multiple small brown oval cocoons along dorsal surface; caudal horn',
+   context:'Nighttime; bare twig in forest understory',
+   obs:'The cocoons are the pupal cases of braconid wasps (Cotesia sp.) that developed inside the living caterpillar. The caterpillar is still alive. This is parasitoid biology — the parasite kills its host, unlike a true parasite.',
+   disc:{ecology:'Parasitoid vs. parasite: parasitoids kill their host as part of their lifecycle; parasites do not — a fundamental ecological distinction',evolution:'Co-evolutionary arms race: caterpillar immune system vs. wasp egg-coating proteins that suppress encapsulation',biocontrol:'Braconid wasps are deployed commercially to control agricultural pest caterpillars — biological pest management in action'}},
+  {file:'_DSF3224.JPG',species:'Sphinx moth caterpillar (dark colour morph)',sci:'Sphingidae sp.',taxon:'Insect',family:'Sphingidae',
+   time:'night',habitat:'forest',mapX:11,mapY:21,
+   alt:'A large dark brown mottled caterpillar with warty texture clings across a grass blade and twig at night.',
+   features:'Dark brown/purple-grey mottled skin; warty bumpy texture; thick robust body; ~8–10 cm; hooked head capsule',
+   context:'Nighttime; grass stem and twig in ground-level vegetation',
+   obs:'Same species as _DSF3215 (or closely related), but in the dark colour morph. One individual is being consumed alive by parasitoid wasps. This one is not — yet. Two different fates, one species.',
+   disc:{evolution:'Colour polymorphism: multiple morphs coexist because predators form search images for the most common form',ecology:'The contrast with _DSF3215 illustrates parasitoid interaction as a mortality source for forest caterpillars'}},
+  {file:'_DSF3239.JPG',species:'Wolf spider / Wandering spider',sci:'Lycosidae or Ctenidae sp.',taxon:'Arachnid',family:'Lycosidae',
+   time:'night',habitat:'forest',mapX:25,mapY:38,
+   alt:'A large spider faces the camera from atop a tropical leaf at night, eight legs spread wide.',
+   features:'Large robust body (~3–4 cm); long banded legs; multiple forward-facing eyes; mottled grey-brown; silk threads but no orb web',
+   context:'Nighttime; glossy broad-leaved tropical plant in forest understory',
+   obs:'Active hunter, not a web-builder. The frontal eye arrangement distinguishes hunters from web-builders. Eye-shine under torchlight is a standard nighttime technique for spotting these spiders.',
+   disc:{anatomy:'Eye arrangement as a character: forward-facing large eyes indicate a hunting spider; lateral eyes in orb-weavers',ecology:'Active vs. sit-and-wait predation: different energy budgets, different microhabitat use, same prey'}},
+  {file:'_DSF3246.JPG',species:'Leaf-footed bug or Assassin bug',sci:'Hemiptera: Coreidae or Reduviidae',taxon:'Insect',family:'Coreidae',
+   time:'night',habitat:'forest',mapX:36,mapY:19,
+   alt:'A tan-brown shield-shaped bug with very long antennae rests on narrow green leaves at night.',
+   features:'Triangular shield-shaped body; tan-brown; very long thin antennae; ~2–3 cm',
+   context:'Nighttime; narrow-leaved plant in forest understory',
+   obs:'Hemiptera are "true bugs" with piercing-sucking mouthparts. The same shield body plan serves plant sap feeders (Coreidae) and predatory bugs (Reduviidae) — radically different ecologies, nearly identical morphology.',
+   disc:{entomology:'Convergent body plan: the shield shape evolved independently in multiple Hemipteran families for different lifestyles',ecology:'Hemipteran functional diversity: plant-feeder, seed-feeder, predator — all within one order with shared morphology'}},
+  {file:'_DSF3247.JPG',species:'Tailless Whip Scorpion',sci:'Amblypygi sp.',taxon:'Arachnid',family:'Amblypygi',
+   time:'night',habitat:'station',mapX:38,mapY:61,
+   alt:'A tailless whip scorpion with extremely long spindly front legs and large pedipalps rests on a metal sign at night.',
+   features:'Flat crab-like body; ultra-long antenniform front legs (sensory, not locomotory); large pedipalps; ~10–15 cm leg span',
+   context:'Nighttime; weathered painted metal sign nailed to tree bark at field station',
+   obs:'Completely harmless despite the appearance. The enormously long front legs are sensory antenniform limbs — they feel the environment, not grip it. Found on bark, walls, and rock faces in tropical buildings.',
+   disc:{'public perception':'A case study in the gap between appearance and danger — useful for discussing scientific literacy and invertebrate fear',evolution:'Antenniform legs are a derived sensory organ, convergently similar to insect antennae but evolutionarily independent'}},
+  {file:'_DSF3264.JPG',species:'Tropical cockroach or katydid',sci:'Blattodea or Tettigoniidae sp.',taxon:'Insect',family:'Blattodea',
+   time:'night',habitat:'forest',mapX:65,mapY:28,
+   alt:'A shiny orange-amber cockroach with long legs and antennae faces the camera on a leaf at night.',
+   features:'Glossy warm orange-amber body; long thin antennae; compound eyes; ~3–4 cm; forewings visible',
+   context:'Nighttime; tropical shrub foliage, forest edge',
+   obs:'The bright amber colouration is striking. Tropical forest cockroaches are detritivores and nutrient cyclers — ecologically valuable species with little resemblance to their synanthropic relatives.',
+   disc:{misconception:'Forest cockroaches vs. urban pest cockroaches: the same order contains ecologically important decomposers — a productive teaching contrast',ecology:'Detritivore role in forest nutrient cycling: cockroaches are among the primary processors of dead plant material in tropical forests'}},
+  {file:'_DSF3268.JPG',species:'Large silk moth or Noctuid moth',sci:'Saturniidae or Noctuidae',taxon:'Insect',family:'Saturniidae',
+   time:'night',habitat:'forest',mapX:5,mapY:36,
+   alt:'A large moth with beige and brown wings marked with dark wavy bands rests on a leaf at night, small eyes glowing.',
+   features:'Wingspan ~12–15 cm; beige/cream base; dark wavy transverse bands; white crescents; scalloped margins; eye-shine at top',
+   context:'Nighttime; broad tropical leaf in forest understory',
+   obs:'Dead-leaf mimicry at this scale is extraordinary. Adult saturniid moths often have no functional mouthparts and live only days — all energy goes into reproduction. The small eye-shine at top of frame is another animal watching.',
+   disc:{evolution:'Dead-leaf mimicry: patterns that resemble specific stages of leaf decay require co-evolution with local vegetation',ecology:'Adult moths without mouthparts: extreme r-strategy — all investment in reproduction, zero in adult survival',photography:'Eye-shine at frame top is a reminder that nighttime fieldwork reveals observers as well as subjects'}},
+  {file:'_DSF3275.JPG',species:'Golden Silk Orb-weaver',sci:'Trichonephila clavipes',taxon:'Arachnid',family:'Nephilidae',
+   time:'night',habitat:'station',mapX:50,mapY:57,
+   alt:'A golden silk orb-weaver with a yellow abdomen and banded black legs hangs on its web on corrugated metal.',
+   features:'Elongated yellow-gold abdomen; long black legs with yellow bands; small cephalothorax; partial web visible',
+   context:'Nighttime; corrugated metal wall of building at field station',
+   obs:'Female — males are dramatically smaller. The web silk is actually golden-yellow in sunlight. This genus is the focus of active materials science research: the silk rivals Kevlar by weight.',
+   disc:{'materials science':'Golden silk tensile strength rivals engineered fibres; active research for medical sutures and ballistic protection',evolution:'Extreme sexual size dimorphism: female can be 100× the mass of the male — linked to male mate-guarding strategy'}},
+  {file:'_DSF3279.JPG',species:'Red-eyed Tree Frog',sci:'Agalychnis callidryas',taxon:'Amphibian',family:'Phyllomedusidae',
+   time:'night',habitat:'station',mapX:90,mapY:70,
+   alt:'A red-eyed tree frog with vivid orange-red eye and orange toe pads is tucked into a gap between corrugated roofing sheets at night.',
+   features:'Orange-red eye with vertical pupil; green dorsal surface; white belly; blue flank colouration; orange toe pads',
+   context:'Nighttime; corrugated metal roofing panels on station building',
+   obs:'Second individual (compare _DSF2806). Using the roofing gap as a day-roost — typical behaviour. Blue flank stripes visible, characteristic of the species. A wild amphibian roosting in a man-made structure.',
+   disc:{ecology:'Microhabitat opportunism: frogs use artificial structures as refugia where natural tree hollows are scarce',physiology:'Coloured eye lids: green eyelids provide camouflage at rest; the shocking orange eye is revealed only when disturbed'}},
+  {file:'_DSF3282.JPG',species:'Small roosting bats',sci:'Chiroptera (possibly Carollia sp.)',taxon:'Mammal',family:'Phyllostomidae',
+   time:'night',habitat:'station',mapX:44,mapY:67,
+   alt:'A cluster of small dark gray-purple bats roost tightly in a gap between a wooden beam and corrugated roofing.',
+   features:'10–15+ individuals; dark gray-purple fur; small body ~5 cm; hanging upside down from corrugations',
+   context:'Nighttime; interior roof gap at field station building',
+   obs:'Colonial roosting in artificial structure. Neotropical bats are primary seed dispersers and pollinators in many forest ecosystems — they maintain the forests we study. Almost entirely underappreciated.',
+   disc:{ecology:'Bat ecosystem services: seed dispersal, pollination, insect control — ecological functions that prop up entire forest communities',evolution:'Echolocation as a sensory system: bats navigate in total darkness using ultrasound — one of evolution\'s most remarkable innovations','public perception':'Fear of bats vs. their ecological value — a productive case study in conservation communication and scientific literacy'}},
+  {file:'_DSF3309.JPG',species:'Grasshopper',sci:'Acrididae or Tettigoniidae sp.',taxon:'Insect',family:'Acrididae',
+   time:'night',habitat:'forest',mapX:18,mapY:28,
+   alt:'A brown grasshopper with folded wings and prominent compound eye rests on glossy tropical leaves at night.',
+   features:'Medium-sized (~3 cm); olive-brown cryptic colouration; prominent compound eye; hind legs folded; antennae pointing forward',
+   context:'Nighttime; tropical shrub or forest understory',
+   obs:'Nocturnal resting posture. Colouration matches both the leaf surface and the stem — camouflage effective from two angles simultaneously.',
+   disc:{entomology:'Short-horned vs. long-horned grasshoppers (Acrididae vs. Tettigoniidae) are distinguished by antenna length — a field identification skill',ecology:'Herbivore feeding pressure: grasshoppers at high density can significantly alter plant community structure'}},
+  {file:'_DSF4326.JPG',species:'Intertidal crabs and barnacles',sci:'Grapsidae + Cirripedia',taxon:'Crustacean',family:'Grapsidae',
+   time:'day',habitat:'coastal',mapX:28,mapY:40,
+   alt:'Multiple small dark crabs and barnacles clustered in rock crevices on a wet coastal surface in daylight.',
+   features:'Small dark crabs; layered sedimentary rock; barnacle clusters; wet surface from recent tidal exposure',
+   context:'Daytime; rocky intertidal zone — shift to coastal field site',
+   obs:'Marks a site change from rainforest to coast. Intertidal zonation is visible across the rock face. Barnacles are highly modified crustaceans — their sessile adult form was one of the great surprises of taxonomy.',
+   disc:{ecology:'Intertidal zonation: each horizontal band represents a community structured by tidal exposure time and wave energy',evolution:'Barnacle taxonomy: sessile barnacles were classified as molluscs until Darwin\'s landmark barnacle work identified them as crustaceans'}},
+  {file:'_DSF4395.JPG',species:'Sandpiper or stint',sci:'Scolopacidae (Calidris or Actitis sp.)',taxon:'Bird',family:'Scolopacidae',
+   time:'day',habitat:'coastal',mapX:38,mapY:43,
+   alt:'A small brown wading bird stands on a wet rocky coastal flat with shallow surf in the background.',
+   features:'Small shorebird (~18 cm); brown-grey upperparts; thin straight bill; long legs; waves in midground',
+   context:'Daytime; rocky intertidal/coastal flat, surf zone',
+   obs:'Typical foraging posture. Many sandpiper species are long-distance migrants facing threats at multiple points along their flyways — a global conservation problem compressed into a small body.',
+   disc:{conservation:'Long-distance migratory shorebirds face breeding, staging, and wintering threats simultaneously — a multi-front conservation challenge',ecology:'Bill morphology as an ecological character: bill length and curvature matches the depth of invertebrate prey in sediment'}},
+  {file:'_DSF4454.JPG',species:'Fiddler crab',sci:'Uca / Minuca sp. (Ocypodidae)',taxon:'Crustacean',family:'Ocypodidae',
+   time:'day',habitat:'coastal',mapX:75,mapY:42,
+   alt:'A single small crab with one enormous red claw and one small claw stands on exposed grey mudflat.',
+   features:'One enlarged red/orange major cheliped; small body (~3 cm carapace); mottled dark body; wet grey mud',
+   context:'Daytime; exposed tidal mudflat, mangrove or estuarine margin',
+   obs:'The enormous claw is characteristic of male fiddler crabs — used in courtship display and territorial signalling. Females have two small chelipeds. The claw is both a weapon and an honest signal of fitness.',
+   disc:{evolution:'Zahavian handicap principle: the claw is costly to produce and maintain precisely because it proves genetic quality',ecology:'Fiddler crab burrows aerate mangrove sediment and cycle nutrients — ecosystem engineers in carbon-rich coastal soils'}},
+  {file:'_DSF4517.JPG',species:'Black Howler Monkey',sci:'Alouatta palliata or A. pigra',taxon:'Mammal',family:'Atelidae',
+   time:'day',habitat:'urban',mapX:54,mapY:80,
+   alt:'A large black howler monkey sits hunched in a tree fork, with utility wires crossing the frame.',
+   features:'All-black adult male; robust build; prehensile tail partially visible; large throat (enlarged hyoid bone); utility cables',
+   context:'Daytime; tree canopy at forest-urban interface — utility wires confirm human settlement proximity',
+   obs:'Male — females are brown. The utility wires confirm where we are. Howlers can be heard before seen; their roar carries 5 km. Electrocution on power lines is a significant mortality source.',
+   disc:{acoustics:'The enlarged hyoid bone acts as a resonance chamber; the howl is among the loudest sounds produced by any land animal',conservation:'Power line electrocution as urban wildlife mortality: wildlife-friendly line design reduces primate deaths',ecology:'Forest fragment specialists: howlers navigate a mosaic of trees and infrastructure across human-modified landscapes'}},
+  {file:'_DSF4805.JPG',species:'Pipevine Swallowtail or similar',sci:'Battus polydamas or Parides sp.',taxon:'Insect',family:'Papilionidae',
+   time:'day',habitat:'urban',mapX:82,mapY:73,
+   alt:'A dark butterfly with wings spread flat on gravelly ground in sunlight — black wings with orange patches and white marginal spots.',
+   features:'Black wings; orange/red basal patches near thorax; white submarginal spots on hindwing; ~7–9 cm wingspan; gravel substrate',
+   context:'Daytime; bare gravelly ground — road edge or dry open area',
+   obs:'Wings spread flat may indicate basking (thermoregulation) or distress. Aposematic colouration signals alkaloid toxicity acquired from Aristolochia host plants. Multiple unrelated butterfly species mimic this pattern.',
+   disc:{chemistry:'Aristolochic acids from larval host plants are sequestered into adult tissues — bitter compounds that deter predators',evolution:'Multiple families have independently evolved mimics of this pattern: Batesian mimics gain protection without toxicity cost'}},
+  {file:'_DSF4817.JPG',species:'Domestic pig',sci:'Sus scrofa domesticus',taxon:'Mammal',family:'Suidae',
+   time:'day',habitat:'urban',mapX:50,mapY:95,
+   alt:'A large domestic pig with grey-pink skin walks on sandy ground between beach loungers, with tourists visible behind.',
+   features:'Large adult pig (~80 cm); grey-pink skin with dark mottling; sandy beach substrate; wooden sun loungers; tourists in background',
+   context:'Daytime; beach tourist area with sun loungers and palm trees',
+   obs:'A free-ranging domestic pig at a tourist beach. The endpoint of Pattern III. Place this image alongside the sloth (_DSF2501) to trace the full wild-to-domestic gradient. The question the image asks: which side of a line is this pig on?',
+   disc:{anthropology:'Human-animal relationships in coastal communities: economic use, cultural norms, and ecological consequences intersect',ecology:'Free-ranging livestock as agents of soil disturbance and vegetation damage in coastal ecosystems',contrast:'Pair with _DSF2501 (sloth in canopy) and _DSF4517 (howler on utility wire) to visualise the wild-domestic spectrum'}}
+];
+
+const CONNECTIONS = [
+  {a:'_DSF2806.JPG',b:'_DSF3279.JPG',type:'species',label:'Same species, two individuals'},
+  {a:'_DSF3202.JPG',b:'_DSF3213.JPG',type:'species',label:'Same species, different lighting angle'},
+  {a:'_DSF3215.JPG',b:'_DSF3224.JPG',type:'species',label:'Same caterpillar species, different fate'},
+  {a:'_DSF3190.JPG',b:'_DSF3199.JPG',type:'mimicry',label:'Müllerian mimicry ring'},
+  {a:'_DSF3199.JPG',b:'_DSF4805.JPG',type:'mimicry',label:'Müllerian mimicry ring'},
+  {a:'_DSF3190.JPG',b:'_DSF4805.JPG',type:'mimicry',label:'Shared aposematic signal'},
+  {a:'_DSF0292.JPG',b:'_DSF2133.JPG',type:'urban',label:'Urban lawn birds — same habitat, different families'},
+  {a:'_DSF0793.JPG',b:'_DSF2133.JPG',type:'urban',label:'Urban wildlife thread'},
+  {a:'_DSF2133.JPG',b:'_DSF4517.JPG',type:'urban',label:'Urban wildlife thread'},
+  {a:'_DSF4517.JPG',b:'_DSF4817.JPG',type:'urban',label:'Wild-to-domestic gradient'},
+];
+
+const PATTERNS = {
+  signals:{
+    test:img=>img.mapX<22||img.mapX>68,
+    color:'#0d6b40',
+    connection_types:['species','mimicry'],
+    label:'Pattern I — Hide or advertise'
+  },
+  night:{
+    test:img=>img.time==='night',
+    color:'#2d4a9a',
+    connection_types:['species'],
+    label:'Pattern II — The night shift'
+  },
+  gradient:{
+    test:img=>['_DSF2501.JPG','_DSF0793.JPG','_DSF0292.JPG','_DSF2133.JPG','_DSF4517.JPG','_DSF4817.JPG','_DSF3279.JPG','_DSF3282.JPG','_DSF2774.JPG'].includes(img.file),
+    color:'#7c3e0e',
+    connection_types:['urban'],
+    label:'Pattern III — Nature–culture gradient'
+  }
+};
+
+let state={pattern:null,taxon:'all',quiz:false,revealed:new Set(),modalIdx:-1};
+
+function getImageByFile(f){return IMAGES.find(i=>i.file===f)}
+function getImageIdx(f){return IMAGES.findIndex(i=>i.file===f)}
+
+function txClass(t){return 'tx-'+t}
+function timeBadge(t){return `<span class="badge ${t==='night'?'t-night':'t-day'}">${t==='night'?'Night':'Day'}</span>`}
+
+/* ── MAP ─────────────────────────── */
+function buildMap(){
+  const outer=document.getElementById('map-outer');
+  const inner=document.getElementById('map-inner');
+  const nodesDiv=document.getElementById('map-nodes');
+  const svg=document.getElementById('map-svg');
+  const tooltip=document.getElementById('node-tooltip');
+  const W=outer.offsetWidth;
+  const H=W*0.58;
+  outer.style.paddingBottom='0';
+  outer.style.height=H+'px';
+
+  nodesDiv.innerHTML='';
+  svg.innerHTML='';
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+
+  const pad={l:30,r:30,t:20,b:30};
+  function toX(v){return pad.l+(W-pad.l-pad.r)*v/100}
+  function toY(v){return (H-pad.b)-(H-pad.t-pad.b)*v/100}
+
+  CONNECTIONS.forEach(c=>{
+    const a=getImageByFile(c.a),b=getImageByFile(c.b);
+    if(!a||!b)return;
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',toX(a.mapX));line.setAttribute('y1',toY(a.mapY));
+    line.setAttribute('x2',toX(b.mapX));line.setAttribute('y2',toY(b.mapY));
+    if(c.type==='species'){line.setAttribute('stroke','#0d6b40');line.setAttribute('stroke-width','1.5');line.setAttribute('opacity','0.55')}
+    else if(c.type==='mimicry'){line.setAttribute('stroke','#8a5000');line.setAttribute('stroke-width','1.5');line.setAttribute('stroke-dasharray','5 3');line.setAttribute('opacity','0.55')}
+    else if(c.type==='urban'){line.setAttribute('stroke','#666');line.setAttribute('stroke-width','1.5');line.setAttribute('stroke-dasharray','3 4');line.setAttribute('opacity','0.45')}
+    line.dataset.connType=c.type;
+    svg.appendChild(line);
+  });
+
+  IMAGES.forEach((img,idx)=>{
+    const div=document.createElement('div');
+    div.className='map-node'+(img.time==='night'?' night-node':'');
+    div.dataset.file=img.file;
+    div.dataset.idx=idx;
+    div.style.left=toX(img.mapX)+'px';
+    div.style.top=toY(img.mapY)+'px';
+    const i=document.createElement('img');
+    i.src=img.file;i.alt=img.species;i.loading='lazy';
+    div.appendChild(i);
+    div.addEventListener('click',()=>openModal(idx));
+    div.addEventListener('mouseenter',e=>{
+      tooltip.textContent=img.species+(img.time==='night'?' · night':'');
+      tooltip.style.display='block';
+      tooltip.style.left=toX(img.mapX)+'px';
+      tooltip.style.top=(toY(img.mapY)-24)+'px';
+    });
+    div.addEventListener('mouseleave',()=>{tooltip.style.display='none'});
+    nodesDiv.appendChild(div);
+  });
+  applyPatternToMap();
+}
+
+function applyPatternToMap(){
+  const nodes=document.querySelectorAll('.map-node');
+  const lines=document.querySelectorAll('.map-svg line');
+  const p=state.pattern?PATTERNS[state.pattern]:null;
+  nodes.forEach(n=>{
+    const img=getImageByFile(n.dataset.file);
+    if(!p){n.classList.remove('dimmed','highlighted');n.style.removeProperty('--highlight-color')}
+    else if(p.test(img)){n.classList.remove('dimmed');n.classList.add('highlighted');n.style.setProperty('--highlight-color',p.color)}
+    else{n.classList.remove('highlighted');n.classList.add('dimmed')}
+  });
+  lines.forEach(l=>{
+    if(!p){l.style.opacity='';return}
+    const show=p.connection_types.includes(l.dataset.connType);
+    l.style.opacity=show?'0.7':'0.05';
+  });
+}
+
+/* ── GALLERY ─────────────────────── */
+function buildTaxonPills(){
+  const taxons=[...new Set(IMAGES.map(i=>i.taxon))].sort();
+  const c=document.getElementById('taxon-pills');
+  c.innerHTML=`<button class="filter-pill active" data-val="all">All</button>`+
+    taxons.map(t=>`<button class="filter-pill" data-val="${t}">${t}</button>`).join('');
+  c.addEventListener('click',e=>{
+    const btn=e.target.closest('.filter-pill');if(!btn)return;
+    c.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    state.taxon=btn.dataset.val;
+    renderGallery();
+  });
+}
+
+function filteredImages(){
+  let imgs=IMAGES;
+  if(state.pattern) imgs=imgs.filter(i=>PATTERNS[state.pattern].test(i));
+  if(state.taxon!=='all') imgs=imgs.filter(i=>i.taxon===state.taxon);
+  return imgs;
+}
+
+function renderGallery(){
+  const imgs=filteredImages();
+  const heading=document.getElementById('gallery-heading');
+  heading.textContent=state.pattern?PATTERNS[state.pattern].label+' — '+imgs.length+' images':'All '+imgs.length+' images';
+  const grid=document.getElementById('gallery-grid');
+  if(!imgs.length){grid.innerHTML='<p style="color:var(--faint);padding:2rem;grid-column:1/-1">No images match these filters.</p>';return;}
+  grid.innerHTML=imgs.map(img=>{
+    const idx=IMAGES.indexOf(img);
+    const quizHide=state.quiz&&!state.revealed.has(img.file);
+    return `<div class="img-card" onclick="openModal(${idx})">
+      <img class="thumb" src="${img.file}" alt="${img.alt}" loading="lazy">
+      <div class="card-body">
+        <div class="card-badges"><span class="badge ${txClass(img.taxon)}">${img.taxon}</span>${timeBadge(img.time)}</div>
+        <div class="card-species${quizHide?' quiz-blur':''}">${img.species}</div>
+        <div class="card-sci${quizHide?' quiz-blur':''}">${img.sci}</div>
+        <div class="card-ctx">${img.context}</div>
+        ${state.quiz&&quizHide?`<button class="reveal-btn" onclick="revealCard(event,'${img.file}')">Reveal species →</button>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function revealCard(e,file){e.stopPropagation();state.revealed.add(file);renderGallery()}
+function toggleQuiz(){
+  state.quiz=!state.quiz;
+  document.getElementById('quiz-toggle').classList.toggle('active',state.quiz);
+  renderGallery();
+}
+
+/* ── PATTERN CARDS ───────────────── */
+document.querySelectorAll('.pattern-card').forEach(card=>{
+  card.addEventListener('click',e=>{
+    if(e.target.classList.contains('dismiss'))return;
+    const p=card.dataset.pattern;
+    state.pattern=state.pattern===p?null:p;
+    document.querySelectorAll('.pattern-card').forEach(c=>c.classList.remove('active'));
+    if(state.pattern)card.classList.add('active');
+    applyPatternToMap();
+    renderGallery();
+  });
+});
+
+function clearPattern(e){
+  e.stopPropagation();
+  state.pattern=null;
+  document.querySelectorAll('.pattern-card').forEach(c=>c.classList.remove('active'));
+  applyPatternToMap();
+  renderGallery();
+}
+
+/* ── MODAL ───────────────────────── */
+function openModal(idx){
+  state.modalIdx=idx;renderModal();
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function renderModal(){
+  const img=IMAGES[state.modalIdx];
+  document.getElementById('modal-img').src=img.file;
+  document.getElementById('modal-img').alt=img.alt;
+  const discHtml=img.disc?`<div class="modal-section"><div class="modal-label">Interdisciplinary connections</div><div class="modal-disc">${
+    Object.entries(img.disc).map(([k,v])=>`<div class="disc-row"><span class="disc-key">${k}</span><span class="disc-val">${v}</span></div>`).join('')
+  }</div></div>`:'';
+  document.getElementById('modal-body').innerHTML=`
+    <div class="modal-badges"><span class="badge ${txClass(img.taxon)}">${img.taxon}</span>${timeBadge(img.time)}</div>
+    <div><div class="modal-species">${img.species}</div><div class="modal-sci">${img.sci} · ${img.family}</div></div>
+    <blockquote class="modal-alt">${img.alt}</blockquote>
+    <div class="modal-section"><div class="modal-label">Key visual features</div><div class="modal-text">${img.features}</div></div>
+    <div class="modal-section"><div class="modal-label">Context &amp; setting</div><div class="modal-text">${img.context}</div></div>
+    <div class="modal-section"><div class="modal-label">Ecological observations</div><div class="modal-text">${img.obs}</div></div>
+    ${discHtml}
+    <div class="modal-nav"><button onclick="shiftModal(-1)">← Previous</button><button onclick="shiftModal(1)">Next →</button></div>`;
+}
+function shiftModal(d){state.modalIdx=(state.modalIdx+d+IMAGES.length)%IMAGES.length;renderModal()}
+document.getElementById('modal-close').onclick=closeModal;
+document.getElementById('modal-overlay').onclick=e=>{if(e.target===document.getElementById('modal-overlay'))closeModal()};
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeModal();
+  if(document.getElementById('modal-overlay').classList.contains('open')){
+    if(e.key==='ArrowRight')shiftModal(1);
+    if(e.key==='ArrowLeft')shiftModal(-1);
+  }
+});
+
+/* ── INIT ────────────────────────── */
+buildTaxonPills();
+renderGallery();
+buildMap();
+window.addEventListener('resize',()=>{clearTimeout(window._reszt);window._reszt=setTimeout(buildMap,150)});
+</script>
+</body>
+</html>
