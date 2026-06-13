@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tropical Wildlife — Interdisciplinary Teaching Resource</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f3ee;--surface:#fff;--text:#1a1a16;--muted:#636358;--faint:#a0a093;
+  --border:#dddbd2;--accent:#0d4a32;--radius:10px;--radius-lg:14px;
+}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:15px;min-height:100vh;display:flex;flex-direction:column}
+.page{max-width:860px;margin:0 auto;padding:0 clamp(1rem,4vw,2.5rem);width:100%;flex:1;display:flex;flex-direction:column;justify-content:center;padding-top:4rem;padding-bottom:4rem}
+
+/* HERO */
+.eyebrow{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:.65rem}
+h1{font-size:2.1rem;font-weight:600;letter-spacing:-.025em;line-height:1.2;margin-bottom:.85rem}
+.lede{font-size:15.5px;color:var(--muted);max-width:580px;line-height:1.75;margin-bottom:2rem}
+
+/* STRIPS */
+.meta-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:3rem}
+.chip{font-size:11.5px;padding:3px 11px;border-radius:20px;border:1px solid var(--border);color:var(--muted)}
+.chip.n{background:#1e2a4a;color:#a8b8e0;border-color:#1e2a4a}
+.chip.d{background:#fffbeb;color:#7c5a0a;border-color:#f5d98a}
+
+/* TOOL CARDS */
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:3rem}
+.tool-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;text-decoration:none;color:inherit;display:flex;flex-direction:column;transition:all .2s}
+.tool-card:hover{border-color:var(--accent);box-shadow:0 4px 20px rgba(0,0,0,.08);transform:translateY(-2px)}
+.tool-card:hover .card-arrow{transform:translateX(3px)}
+.card-preview{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;background:var(--bg)}
+.card-preview-placeholder{width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;font-size:2.5rem;background:var(--bg)}
+.card-body{padding:1.25rem 1.4rem 1.4rem;flex:1;display:flex;flex-direction:column;gap:.5rem}
+.card-label{font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--faint)}
+.card-title{font-size:16px;font-weight:600;line-height:1.3;display:flex;align-items:flex-start;justify-content:space-between;gap:.5rem}
+.card-arrow{font-size:18px;color:var(--faint);transition:transform .2s;flex-shrink:0;margin-top:1px}
+.card-desc{font-size:12.5px;color:var(--muted);line-height:1.6;flex:1}
+.card-features{display:flex;gap:5px;flex-wrap:wrap;margin-top:.35rem}
+.feat{font-size:10.5px;padding:2px 7px;border-radius:10px;background:var(--bg);border:1px solid var(--border);color:var(--muted)}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:0 0 2.5rem}
+
+/* FOOTER */
+.footer-note{font-size:12px;color:var(--faint);line-height:1.7;max-width:560px}
+.footer-note a{color:var(--muted);text-decoration:underline;text-underline-offset:2px}
+
+/* RESPONSIVE */
+@media(max-width:580px){
+  .tools{grid-template-columns:1fr}
+  h1{font-size:1.5rem}
+  .page{padding-top:2.5rem;padding-bottom:2.5rem}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <p class="eyebrow">Interdisciplinary Teaching Resource</p>
+  <h1>Tropical wildlife —<br>one field trip, two tools</h1>
+  <p class="lede">31 photographs from a single field trip through tropical Central America and the coast. Use the tools below to explore, classify, and discuss the images across disciplines — from ecology and evolution to photography and conservation.</p>
+
+  <div class="meta-row">
+    <span class="chip">31 photographs</span>
+    <span class="chip">8 taxonomic groups</span>
+    <span class="chip n">17 after dark</span>
+    <span class="chip d">14 daylight</span>
+    <span class="chip">Forest · Coast · Urban</span>
+  </div>
+
+  <div class="tools">
+
+    <a class="tool-card" href="workshop_gallery.html">
+      <img class="card-preview" src="_DSF2806.JPG" alt="Red-eyed tree frog — preview of the workshop gallery">
+      <div class="card-body">
+        <div class="card-label">Tool 1</div>
+        <div class="card-title">
+          Thirty images, three arguments
+          <span class="card-arrow">→</span>
+        </div>
+        <p class="card-desc">An editorial gallery built around three cross-cutting patterns in the set. Photographs are positioned on a relationship map by signal strategy and habitat. Includes quiz mode and interdisciplinary discussion notes for each image.</p>
+        <div class="card-features">
+          <span class="feat">Relationship map</span>
+          <span class="feat">Pattern filters</span>
+          <span class="feat">Quiz mode</span>
+          <span class="feat">Discussion notes</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="tool-card" href="tropical_wildlife_database.html">
+      <img class="card-preview" src="_DSF3202.JPG" alt="Glasswing butterfly — preview of the wildlife database">
+      <div class="card-body">
+        <div class="card-label">Tool 2</div>
+        <div class="card-title">
+          Wildlife database
+          <span class="card-arrow">→</span>
+        </div>
+        <p class="card-desc">A searchable, filterable catalog of all images with species identification, taxonomic classification, habitat data, and field notes. Useful for systematic exploration and species comparison.</p>
+        <div class="card-features">
+          <span class="feat">Search</span>
+          <span class="feat">Filter by taxon</span>
+          <span class="feat">Filter by habitat</span>
+          <span class="feat">Grid &amp; list view</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="divider"></div>
+
+  <p class="footer-note">
+    Photographs taken at a tropical field station in Central America and surrounding coastal habitats.
+    Metadata compiled from field notes and specimen identification.
+    Built as a teaching resource for interdisciplinary natural history workshops.
+  </p>
+
+</div>
+</body>
+</html>
